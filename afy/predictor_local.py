@@ -17,7 +17,7 @@ def normalize_kp(kp_source, kp_driving, kp_driving_initial, adapt_movement_scale
     else:
         adapt_movement_scale = 1
 
-    kp_new = {k: v for k, v in kp_driving.items()}
+    kp_new = dict(kp_driving.items())
 
     if use_relative_movement:
         kp_value_diff = (kp_driving['value'] - kp_driving_initial['value'])
@@ -111,11 +111,9 @@ class PredictorLocal:
             return out
 
     def get_frame_kp(self, image):
-        kp_landmarks = self.fa.get_landmarks(image)
-        if kp_landmarks:
+        if kp_landmarks := self.fa.get_landmarks(image):
             kp_image = kp_landmarks[0]
-            kp_image = self.normalize_alignment_kp(kp_image)
-            return kp_image
+            return self.normalize_alignment_kp(kp_image)
         else:
             return None
 
