@@ -26,7 +26,7 @@ def query_cameras(n_cams):
             cap.release()
             continue
 
-        for i in range(10):
+        for _ in range(10):
             ret, frame = cap.read()
 
         cam_frames[camid] = frame.copy()
@@ -74,7 +74,15 @@ def select_camera(cam_frames, window="Camera selector"):
         cell_size = 640, 480
         grid = cv2.resize(grid, cell_size)
 
-    cv2.putText(grid, f'Click on the web camera to use', (10, grid.shape[0] - 30), 0, 0.7, (200, 200, 200), 2)
+    cv2.putText(
+        grid,
+        'Click on the web camera to use',
+        (10, grid.shape[0] - 30),
+        0,
+        0.7,
+        (200, 200, 200),
+        2,
+    )
 
     cv2.namedWindow(window)
     cv2.setMouseCallback(window, mouse_callback, (cell_size, grid_cols, cam_frames))
@@ -85,7 +93,7 @@ def select_camera(cam_frames, window="Camera selector"):
 
         if g_selected_cam is not None:
             break
-        
+
         if key == 27:
             break
 
@@ -101,9 +109,7 @@ if __name__ == '__main__':
     with open('config.yaml', 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
-    cam_frames = query_cameras(config['query_n_cams'])
-
-    if cam_frames:
+    if cam_frames := query_cameras(config['query_n_cams']):
         selected_cam = select_camera(cam_frames)
         print(f"Selected camera {selected_cam}")
     else:

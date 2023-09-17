@@ -19,8 +19,8 @@ log = Tee('./var/log/cam_fomm.log')
 # Where to split an array from face_alignment to separate each landmark
 LANDMARK_SLICE_ARRAY = np.array([17, 22, 27, 31, 36, 42, 48, 60])
 
-if _platform == 'darwin':
-    if not opt.is_client:
+if not opt.is_client:
+    if _platform == 'darwin':
         info('\nOnly remote GPU mode is supported for Mac (use --is-client and --connect options to connect to the server)')
         info('Standalone version will be available lately!\n')
         exit()
@@ -71,11 +71,11 @@ def load_images(IMG_SIZE = 256):
     avatars = []
     filenames = []
     images_list = sorted(glob.glob(f'{opt.avatars}/*'))
-    for i, f in enumerate(images_list):
+    for f in images_list:
         if f.endswith('.jpg') or f.endswith('.jpeg') or f.endswith('.png'):
             img = cv2.imread(f)
             if img is None:
-                log("Failed to open image: {}".format(f))
+                log(f"Failed to open image: {f}")
                 continue
 
             if img.ndim == 2:
@@ -162,20 +162,20 @@ def select_camera(config):
         with open(cam_config, 'r') as f:
             cam_config = yaml.load(f, Loader=yaml.FullLoader)
             cam_id = cam_config['cam_id']
+    elif cam_frames := cam_selector.query_cameras(config['query_n_cams']):
+        cam_id = (
+            list(cam_frames)[0]
+            if len(cam_frames) == 1
+            else cam_selector.select_camera(
+                cam_frames, window="CLICK ON YOUR CAMERA"
+            )
+        )
+        log(f"Selected camera {cam_id}")
+
+        with open(cam_config, 'w') as f:
+            yaml.dump({'cam_id': cam_id}, f)
     else:
-        cam_frames = cam_selector.query_cameras(config['query_n_cams'])
-
-        if cam_frames:
-            if len(cam_frames) == 1:
-                cam_id = list(cam_frames)[0]
-            else:
-                cam_id = cam_selector.select_camera(cam_frames, window="CLICK ON YOUR CAMERA")
-            log(f"Selected camera {cam_id}")
-
-            with open(cam_config, 'w') as f:
-                yaml.dump({'cam_id': cam_id}, f)
-        else:
-            log("No cameras are available")
+        log("No cameras are available")
 
     return cam_id
 
